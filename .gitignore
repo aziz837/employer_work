@@ -78,3 +78,4 @@ venv/
 .exrc
 
 pyvenv.cfg
+db.sqlite3
