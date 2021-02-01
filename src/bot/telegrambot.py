@@ -78,6 +78,16 @@ def get_phone_number(update: Update, context: CallbackContext):
 
     return 8
 # need change
+
+def get_phone_number_2(update: Update, context: CallbackContext):
+    query = update.callback_query
+    text = 'Telefon nomeringizni kiriting: '
+    contact_number = KeyboardButton(text="Contact", request_contact=True)
+    query.delete_message()
+    context.bot.send_message(query.from_user.id, text, reply_markup=ReplyKeyboardMarkup([[contact_number]], resize_keyboard=True))
+    print('get_phone_number_2')
+
+    return 8
         
 def category_2(update: Update, context: CallbackContext):
 
@@ -146,7 +156,8 @@ def region_2(update: Update, context: CallbackContext):
         'Qaysi Viloyatdansz: ', 
         reply_markup=InlineKeyboardMarkup(buttons)
     )
-    return 6
+    print('region 2')
+    return 14
 
 def region(update: Update, context: CallbackContext):
     regions = Region.objects.all()
@@ -156,6 +167,7 @@ def region(update: Update, context: CallbackContext):
         'Qaysi Viloyatdansz: ', 
         reply_markup=InlineKeyboardMarkup(buttons)
     )
+    print('region 1')
     return 6
 
 def district(update: Update, context: CallbackContext):
@@ -175,10 +187,27 @@ def district(update: Update, context: CallbackContext):
 
     return 7
 
+def district_2(update: Update, context: CallbackContext):
+
+    query = update.callback_query
+    tg_user = query.from_user
+    datas = query.data.split('_')
+    if datas[0] == 'category':
+        cat_id = int(datas[1])
+        disct = District.objects.raw('SELECT * FROM bot_district where region_id=%s',[cat_id])
+        buttons= generateButtons(disct)
+    query.message.delete()
+    print(buttons)
+    query.message.reply_text(
+        'Qaysi tumandansz: ',
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
+    return 15
+
 def check_phone(update: Update, context: CallbackContext):
+    print('check_phone')
     query = update.message
     tg_user = query.from_user
-    # print(tg_user)
     try:
         user = User.objects.get(tg_id=tg_user.id)
     except Exception:
@@ -189,6 +218,20 @@ def check_phone(update: Update, context: CallbackContext):
         return last(update, context)
     else:
         return get_phone_number(update, context)
+
+def check_phone_2(update: Update, context: CallbackContext):
+    query = update.callback_query
+    tg_user = query.from_user
+    try:
+        user = User.objects.get(tg_id=tg_user.id)
+    except Exception:
+        user = None
+
+
+    if user.phone:
+        query.edit_message_text('Biz sizni malumotlarizi olib qoydik siz bilan boglanamiz !')
+    else:
+        return get_phone_number_2(update, context)
 
 def locations(update, context):
     query = update.callback_query
@@ -221,18 +264,17 @@ def locations(update, context):
     return 13
 
 def last(update, context):
+    print('finally everything good  ! ! ! ')
     tg_user = update.message.from_user
     phone_user = update.message
-    print(phone_user)
     try:
         user = User.objects.get(tg_id=tg_user.id)
     except Exception:
         user = None
 
-    
-
-    user.phone=phone_user.contact.phone_number
-    user.save()
+    if not user.phone:
+        user.phone=phone_user.contact.phone_number
+        user.save()
 
     update.message.reply_text('Biz sizni malumotlarizi olib qoydik siz bilan boglanamiz !')
 
