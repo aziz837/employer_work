@@ -1,6 +1,6 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters
 
-from .models import Category, Region, User, District, Order
+from .models import Category, Region, User, District, Order, UserCategory
 
 from telegram.ext import (
     CommandHandler,
@@ -105,6 +105,18 @@ def category_2(update: Update, context: CallbackContext):
 
 def more_category(update: Update, context: CallbackContext):
     query = update.callback_query
+    datas= query.data.split('_')
+    tg_user = query.from_user
+    if datas[0] == 'category':
+        cat_id = int(datas[1])
+        context.user_data['category_id_2 :'] = cat_id
+    try:
+        user = User.objects.get(tg_id=tg_user.id)
+    except Exception:
+        user = None
+
+    user_category = UserCategory(user_id_id=user.id, cat_id_id=context.user_data['category_id_2 :'])
+    user_category.save()
     print(query.data)
     jobs = [
         [
@@ -280,7 +292,8 @@ def last(update, context):
             Region_id=context.user_data['region_id :'], 
             district_id=context.user_data['distcrit_id :'])
     order.save()
-    context.bot.send_message(292424791, f'oka ish bor...\n{order.description}')
+    ordering = Order.objects.filter(cat_id=context.user_data['category_id :'])
+    context.bot.send_message(ordering, f'oka ish bor...\n{order.description}')
     context.bot.send_message(1304604274, f'oka ish bor...\n{order.description}')
     print('saved')
 
