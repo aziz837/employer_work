@@ -1,6 +1,6 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters
 
-from .models import Category, Region, User, District
+from .models import Category, Region, User, District, Order
 
 from telegram.ext import (
     CommandHandler,
@@ -57,6 +57,7 @@ def start(update: Update, context: CallbackContext) -> None:
 def employer(update: Update, context: CallbackContext):
     query = update.callback_query
     datas = query.from_user
+    
     try:
         user = User.objects.get(tg_id=datas.id)
     except Exception:
@@ -128,21 +129,27 @@ def user_category(update: Update, context: CallbackContext):
 
 
 def category(update: Update, context: CallbackContext) :
+
     query = update.callback_query
+    context.user_data['type']= query.data
     datas = query.data.split('_')
     childs = Category.objects.all()
     buttons = generateButtons(childs)
-
+    # info = f"type:{context.user_data['type']}"
     query.message.delete()
     query.message.reply_text(
-        'Qanday ish qilish kere: ',
-        reply_markup=InlineKeyboardMarkup(buttons)
+    'birortasini tanlang:', reply_markup=InlineKeyboardMarkup(buttons)
     )
     return 4
 
 def descriptions(update: Update, context: CallbackContext):
     query = update.callback_query
     datas = query.data.split('_')
+    if datas[0] == 'category':
+        cat_id = int(datas[1])
+        context.user_data['category_id :'] = cat_id
+        print(context.user_data['category_id :'])
+    
     text = 'Ish xaqida qisqacha malumot yozing'
     query.message.reply_text(text)
     return 5
@@ -160,6 +167,8 @@ def region_2(update: Update, context: CallbackContext):
     return 14
 
 def region(update: Update, context: CallbackContext):
+    user = update.message
+    context.user_data['description :'] = user.text
     regions = Region.objects.all()
     buttons= generateButtons(regions)
     
@@ -173,10 +182,12 @@ def region(update: Update, context: CallbackContext):
 def district(update: Update, context: CallbackContext):
 
     query = update.callback_query
+    context.user_data['region_id :'] = query.data
     tg_user = query.from_user
     datas = query.data.split('_')
     if datas[0] == 'category':
         cat_id = int(datas[1])
+        context.user_data['region_id :'] = cat_id
         disct = District.objects.raw('SELECT * FROM bot_district where region_id=%s',[cat_id])
         buttons= generateButtons(disct)
     query.message.delete()
@@ -207,6 +218,8 @@ def district_2(update: Update, context: CallbackContext):
 def check_phone(update: Update, context: CallbackContext):
     print('check_phone')
     query = update.message
+    
+    context.user_data['location :']= query.location
     tg_user = query.from_user
     try:
         user = User.objects.get(tg_id=tg_user.id)
@@ -235,40 +248,23 @@ def check_phone_2(update: Update, context: CallbackContext):
 
 def locations(update, context):
     query = update.callback_query
-    
+    datas = query.data.split('_')
+    if datas[0] == 'category':
+        cat_id = int(datas[1])
+        context.user_data['distcrit_id :'] = cat_id
+
     location_keyboard = KeyboardButton(text="send location",  request_location=True)
     query.message.reply_text('lacation tashlang!', reply_markup=ReplyKeyboardMarkup([[location_keyboard]]))
-
-    # get phone number
-
-    # tg_user = update.message.from_user
-
-    # try:
-    #     user = User.objects.get(tg_id=tg_user.id)
-    # except Exception:
-    #     user = None
-    # tell = user.phone
-
-    # print('hey')
-
-    # user.phone = update.message.contact.phone_number
-    # user.save()
-
-    # if tell:
-    #     next = 8
-    # else:
-    #     next = 11
-
-    # end get phone number
-
+    
     return 13
 
 def last(update, context):
-    print('finally everything good  ! ! ! ')
-    tg_user = update.message.from_user
-    phone_user = update.message
+    # tg_user = update.message.from_user
+    # phone_user = update.message
+    query = update.message
+    # tg_user = query.data
     try:
-        user = User.objects.get(tg_id=tg_user.id)
+        user = User.objects.get(tg_id=query.from_user.id)
     except Exception:
         user = None
 
@@ -276,7 +272,20 @@ def last(update, context):
         user.phone=phone_user.contact.phone_number
         user.save()
 
-    update.message.reply_text('Biz sizni malumotlarizi olib qoydik siz bilan boglanamiz !')
+    print('saving....')
+    order = Order(user_id=user.id , 
+            cat_id=context.user_data['category_id :'], 
+            description=context.user_data['description :'], 
+            location=context.user_data['location :'], 
+            Region_id=context.user_data['region_id :'], 
+            district_id=context.user_data['distcrit_id :'])
+    order.save()
+    context.bot.send_message(292424791, f'oka ish bor...\n{order.description}')
+    context.bot.send_message(1304604274, f'oka ish bor...\n{order.description}')
+    print('saved')
+
+    info = f"category_id{context.user_data['category_id :']}\n description{context.user_data['description :']}\n region{context.user_data['region_id :']}\n district{context.user_data['distcrit_id :']}\n location{context.user_data['location :']}"
+    update.message.reply_text(info)
 
 def help_command(update, context):
     update.message.reply_text('hi !')
