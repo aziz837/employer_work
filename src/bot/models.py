@@ -10,15 +10,19 @@ class Category(models.Model):
 
 class Region(models.Model):
     title = models.CharField(max_length=80 )
-    parend_id = models.IntegerField( null=True, blank=False)
+    def __str__(self):
+        return self.title
 
+class District(models.Model):
+    title = models.CharField(max_length=80 )
+    region = models.ForeignKey(Region, on_delete=models.CASCADE , null=True)
     def __str__(self):
         return self.title
 
 class User(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100, blank=True, null=True)
-    tg_id = models.BigIntegerField(max_length=100, blank=True, null=True)
+    tg_id = models.BigIntegerField( blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     type_work = models.IntegerField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now=True, blank=True)
@@ -34,9 +38,10 @@ class UserCategory(models.Model):
 
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    cat = models.ForeignKey(Category, on_delete=models.CASCADE)
-    description = models.TextField
+    cat = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
+    description = models.TextField(null=True)
     location = models.CharField(max_length=100)
-    district = models.ForeignKey(Region, on_delete=models.CASCADE)
+    Region = models.ForeignKey(Region, on_delete=models.CASCADE, null=True)
+    district = models.ForeignKey(District, on_delete=models.CASCADE, null=True)
     create_at = models.DateTimeField(auto_now=True, blank=True)
 

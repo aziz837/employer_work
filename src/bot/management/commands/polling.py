@@ -38,9 +38,12 @@ class Command(BaseCommand):
                 5: [MessageHandler(Filters.text & ~Filters.command, region), CommandHandler('start', start)],
                 6: [CallbackQueryHandler(district)],
                 7:[CallbackQueryHandler(locations)],
-                8:[MessageHandler(Filters.location, last)],
+                8:[MessageHandler(Filters.contact, last)],
                 9:[CallbackQueryHandler(more_category)],
                 10:[CallbackQueryHandler(user_category)],
+                11: [CallbackQueryHandler(get_phone_number)],
+                12: [CallbackQueryHandler(category_2)],
+                13: [MessageHandler(Filters.location, check_phone)],
 
             },
             fallbacks=[CommandHandler('help', help)],
