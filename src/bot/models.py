@@ -45,3 +45,12 @@ class Order(models.Model):
     district = models.ForeignKey(District, on_delete=models.CASCADE, null=True)
     create_at = models.DateTimeField(auto_now=True, blank=True)
 
+class UserRegion(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    region = models.ForeignKey(Region, on_delete=models.CASCADE)
+    district = models.ForeignKey(District, on_delete=models.CASCADE, null=True)
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True, blank=True)
+    update_at = models.DateTimeField(auto_now=True, blank=True)
+
+    class Meta:
+        unique_together = [['user', 'region', 'district']]

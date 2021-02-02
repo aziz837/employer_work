@@ -19,7 +19,7 @@ from telegram import(
     InlineKeyboardMarkup,
     KeyboardButton
 ) 
-
+from .globals import texts
 
 import logging
 logger = logging.getLogger(__name__)
@@ -204,7 +204,7 @@ def district(update: Update, context: CallbackContext):
         buttons= generateButtons(disct)
     query.message.delete()
     query.message.reply_text(
-        'Qaysi tumandansz: ', 
+        texts.get('select_district', '-'), 
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
@@ -292,10 +292,22 @@ def last(update, context):
             Region_id=context.user_data['region_id :'], 
             district_id=context.user_data['distcrit_id :'])
     order.save()
-    ordering = Order.objects.filter(cat_id=context.user_data['category_id :'])
+    ordering = Order.objects.raw(""" SELECT *
+                            FRom bot_user bu 
+                            WHERE id in (
+                            SELECT user_id_id 
+                                FROM bot_usercategory
+                                WHERE cat_id_id = 4
+                                ) 
+                                and 
+                                (SELECT id 
+                                FROM bot_region 
+                                where id = 7 
+                                )""")
+    print(ordering)
     context.bot.send_message(ordering, f'oka ish bor...\n{order.description}')
-    context.bot.send_message(1304604274, f'oka ish bor...\n{order.description}')
-    print('saved')
+    # context.bot.send_message(1304604274, f'oka ish bor...\n{order.description}')
+    # print('saved')
 
     info = f"category_id{context.user_data['category_id :']}\n description{context.user_data['description :']}\n region{context.user_data['region_id :']}\n district{context.user_data['distcrit_id :']}\n location{context.user_data['location :']}"
     update.message.reply_text(info)
