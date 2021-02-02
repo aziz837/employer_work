@@ -1,6 +1,6 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters
 
-from .models import Category, Region, User, District, Order, UserCategory
+from .models import Category, Region, User, District, Order, UserCategory, UserRegion
 
 from telegram.ext import (
     CommandHandler,
@@ -168,6 +168,9 @@ def descriptions(update: Update, context: CallbackContext):
 
 def region_2(update: Update, context: CallbackContext):
     query = update.callback_query
+    datas = query.data.split('_')
+    if datas[0] == 'category':
+        cat_id = int(datas[1])
     regions = Region.objects.all()
     buttons= generateButtons(regions)
     
@@ -218,6 +221,7 @@ def district_2(update: Update, context: CallbackContext):
     if datas[0] == 'category':
         cat_id = int(datas[1])
         disct = District.objects.raw('SELECT * FROM bot_district where region_id=%s',[cat_id])
+        context.user_data['user_region']= cat_id
         buttons= generateButtons(disct)
     query.message.delete()
     print(buttons)
@@ -237,7 +241,13 @@ def check_phone(update: Update, context: CallbackContext):
         user = User.objects.get(tg_id=tg_user.id)
     except Exception:
         user = None
-
+    order = Order(user_id=user.id , 
+            cat_id=context.user_data['category_id :'], 
+            description=context.user_data['description :'], 
+            location=context.user_data['location :'], 
+            Region_id=context.user_data['region_id :'], 
+            district_id=context.user_data['distcrit_id :'])
+    order.save()
 
     if user.phone:
         return last(update, context)
@@ -246,15 +256,25 @@ def check_phone(update: Update, context: CallbackContext):
 
 def check_phone_2(update: Update, context: CallbackContext):
     query = update.callback_query
+    datas = query.data.split('_')
+    if datas[0] == 'category':
+        cat_id = int(datas[1])
+        context.user_data['user_district']= cat_id
     tg_user = query.from_user
     try:
         user = User.objects.get(tg_id=tg_user.id)
     except Exception:
         user = None
-
-
+    try:
+        user_region = UserRegion(user_id=user.id,
+                        region_id=context.user_data['user_region'], 
+                        district_id=context.user_data['user_district']) 
+        user_region.save()
+    except Exception:
+        pass
+  
     if user.phone:
-        query.edit_message_text('Biz sizni malumotlarizi olib qoydik siz bilan boglanamiz !')
+        return last(update, context)
     else:
         return get_phone_number_2(update, context)
 
@@ -271,46 +291,38 @@ def locations(update, context):
     return 13
 
 def last(update, context):
-    # tg_user = update.message.from_user
-    # phone_user = update.message
-    query = update.message
-    # tg_user = query.data
-    try:
-        user = User.objects.get(tg_id=query.from_user.id)
-    except Exception:
-        user = None
+    query= update.callback_query
+    if update.message:
+        user = update.message
+        try:
+            user = User.objects.get(tg_id=user.from_user.id)
+        except Exception:
+            user = None
+        print(user.from_user.id)
+        if not user.phone:
+            user.phone=phone_user.contact.phone_number
+            user.save()
+    elif update.callback_query:
+        query= update.callback_query
+        try:
+            user = User.objects.get(tg_id=query.from_user.id)
+            print('okokokokok')
+        except Exception:
+            user = None
+        print(query.from_user.id)
+        if not user.phone:
+            user.phone=phone_user.contact.phone_number
+            user.save()
 
-    if not user.phone:
-        user.phone=phone_user.contact.phone_number
-        user.save()
-
-    print('saving....')
-    order = Order(user_id=user.id , 
-            cat_id=context.user_data['category_id :'], 
-            description=context.user_data['description :'], 
-            location=context.user_data['location :'], 
-            Region_id=context.user_data['region_id :'], 
-            district_id=context.user_data['distcrit_id :'])
-    order.save()
-    ordering = Order.objects.raw(""" SELECT *
-                            FRom bot_user bu 
-                            WHERE id in (
-                            SELECT user_id_id 
-                                FROM bot_usercategory
-                                WHERE cat_id_id = 4
-                                ) 
-                                and 
-                                (SELECT id 
-                                FROM bot_region 
-                                where id = 7 
-                                )""")
-    print(ordering)
-    context.bot.send_message(ordering, f'oka ish bor...\n{order.description}')
-    # context.bot.send_message(1304604274, f'oka ish bor...\n{order.description}')
-    # print('saved')
-
-    info = f"category_id{context.user_data['category_id :']}\n description{context.user_data['description :']}\n region{context.user_data['region_id :']}\n district{context.user_data['distcrit_id :']}\n location{context.user_data['location :']}"
-    update.message.reply_text(info)
+    ordering = Order.objects.raw()
+    # context.bot.send_message(ordering, f'oka ish bor...\n{order.description}')
+    # context.bot.send_message(ordering)
+    for data in ordering:
+        print(data)
+        # context.bot.send_message(12, 'sdsdsd')
+    
+    # info = f"category_id{context.user_data['category_id :']}\n description{context.user_data['description :']}\n region{context.user_data['region_id :']}\n district{context.user_data['distcrit_id :']}\n location{context.user_data['location :']}"
+    query.message.reply_text('tamon avtobus keti ')
 
 def help_command(update, context):
     update.message.reply_text('hi !')
