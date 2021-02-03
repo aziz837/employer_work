@@ -10,3 +10,5 @@ def getOwners(category_id, region_id, district_id):
                 inner join 
                     (select user_id from bot_userregion where region_id=%s and district_id =%s GROUP by user_id ) as user_regions 
                     on bu.id = user_regions.user_id""", [category_id, region_id, district_id])
+        row = cursor.fetchone()
+    return row

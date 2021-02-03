@@ -20,6 +20,7 @@ from telegram import(
     KeyboardButton
 ) 
 from .globals import texts
+from .services import getOwners
 
 import logging
 logger = logging.getLogger(__name__)
@@ -159,7 +160,7 @@ def descriptions(update: Update, context: CallbackContext):
     datas = query.data.split('_')
     if datas[0] == 'category':
         cat_id = int(datas[1])
-        context.user_data['category_id :'] = cat_id
+        context.user_data['category_id'] = cat_id
         print(context.user_data['category_id :'])
     
     text = 'Ish xaqida qisqacha malumot yozing'
@@ -314,15 +315,18 @@ def last(update, context):
             user.phone=phone_user.contact.phone_number
             user.save()
 
-    ordering = Order.objects.raw()
+    ordering = getOwners(
+            context.user_data['category_id_2 :'],
+            context.user_data['user_region'],
+            context.user_data['user_district'] )
     # context.bot.send_message(ordering, f'oka ish bor...\n{order.description}')
     # context.bot.send_message(ordering)
-    for data in ordering:
-        print(data)
+    # for data in ordering:
+    print(ordering)
         # context.bot.send_message(12, 'sdsdsd')
     
     # info = f"category_id{context.user_data['category_id :']}\n description{context.user_data['description :']}\n region{context.user_data['region_id :']}\n district{context.user_data['distcrit_id :']}\n location{context.user_data['location :']}"
-    query.message.reply_text('tamon avtobus keti ')
+    query.message.reply_text('Biz sizni malumotlarizi oldik sz bilan boglanamz')
 
 def help_command(update, context):
     update.message.reply_text('hi !')
