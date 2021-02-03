@@ -161,7 +161,7 @@ def descriptions(update: Update, context: CallbackContext):
     if datas[0] == 'category':
         cat_id = int(datas[1])
         context.user_data['category_id'] = cat_id
-        print(context.user_data['category_id :'])
+
     
     text = 'Ish xaqida qisqacha malumot yozing'
     query.message.reply_text(text)
@@ -184,7 +184,7 @@ def region_2(update: Update, context: CallbackContext):
 
 def region(update: Update, context: CallbackContext):
     user = update.message
-    context.user_data['description :'] = user.text
+    context.user_data['description'] = user.text
     regions = Region.objects.all()
     buttons= generateButtons(regions)
     
@@ -198,12 +198,12 @@ def region(update: Update, context: CallbackContext):
 def district(update: Update, context: CallbackContext):
 
     query = update.callback_query
-    context.user_data['region_id :'] = query.data
+    context.user_data['region_id'] = query.data
     tg_user = query.from_user
     datas = query.data.split('_')
     if datas[0] == 'category':
         cat_id = int(datas[1])
-        context.user_data['region_id :'] = cat_id
+        context.user_data['region_id'] = cat_id
         disct = District.objects.raw('SELECT * FROM bot_district where region_id=%s',[cat_id])
         buttons= generateButtons(disct)
     query.message.delete()
@@ -236,18 +236,18 @@ def check_phone(update: Update, context: CallbackContext):
     print('check_phone')
     query = update.message
     
-    context.user_data['location :']= query.location
+    context.user_data['location'] = query.location
     tg_user = query.from_user
     try:
         user = User.objects.get(tg_id=tg_user.id)
     except Exception:
         user = None
     order = Order(user_id=user.id , 
-            cat_id=context.user_data['category_id :'], 
-            description=context.user_data['description :'], 
-            location=context.user_data['location :'], 
-            Region_id=context.user_data['region_id :'], 
-            district_id=context.user_data['distcrit_id :'])
+            cat_id=context.user_data['category_id'],
+            description=context.user_data['description'],
+            location=context.user_data['location'],
+            Region_id=context.user_data['region_id'],
+            district_id=context.user_data['distcrit_id'])
     order.save()
 
     if user.phone:
@@ -284,7 +284,7 @@ def locations(update, context):
     datas = query.data.split('_')
     if datas[0] == 'category':
         cat_id = int(datas[1])
-        context.user_data['distcrit_id :'] = cat_id
+        context.user_data['distcrit_id'] = cat_id
 
     location_keyboard = KeyboardButton(text="send location",  request_location=True)
     query.message.reply_text('lacation tashlang!', reply_markup=ReplyKeyboardMarkup([[location_keyboard]]))
@@ -292,16 +292,16 @@ def locations(update, context):
     return 13
 
 def last(update, context):
-    query= update.callback_query
+    phone_user = update.message
     if update.message:
         user = update.message
         try:
             user = User.objects.get(tg_id=user.from_user.id)
         except Exception:
             user = None
-        print(user.from_user.id)
+
         if not user.phone:
-            user.phone=phone_user.contact.phone_number
+            user.phone = update.contact.phone_number
             user.save()
     elif update.callback_query:
         query= update.callback_query
@@ -314,14 +314,16 @@ def last(update, context):
             user.save()
 
     ordering = getOwners(
-            context.user_data['category_id :'], 
-            context.user_data['region_id :'],
-            context.user_data['distcrit_id :'] )
+            context.user_data['category_id'],
+            context.user_data['region_id'],
+            context.user_data['distcrit_id'])
     # context.bot.send_message(ordering, f'oka ish bor...\n{order.description}')
     # context.bot.send_message(ordering)
     for data in ordering:
         context.bot.send_message(data['tg_id'], 'jjjjjj')
-    query.message.reply_text('Biz sizni malumotlarizi oldik sz bilan boglanamz')
+
+    context.bot.send_message(user.tg_id, 'Biz sizni malumotlarizi oldik sz bilan boglanamz')
+    # query.message.reply_text('Biz sizni malumotlarizi oldik sz bilan boglanamz')
 
 def help_command(update, context):
     update.message.reply_text('hi !')
