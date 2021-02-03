@@ -307,25 +307,20 @@ def last(update, context):
         query= update.callback_query
         try:
             user = User.objects.get(tg_id=query.from_user.id)
-            print('okokokokok')
         except Exception:
             user = None
-        print(query.from_user.id)
         if not user.phone:
             user.phone=phone_user.contact.phone_number
             user.save()
 
     ordering = getOwners(
-            context.user_data['category_id_2 :'],
-            context.user_data['user_region'],
-            context.user_data['user_district'] )
+            context.user_data['category_id :'], 
+            context.user_data['region_id :'],
+            context.user_data['distcrit_id :'] )
     # context.bot.send_message(ordering, f'oka ish bor...\n{order.description}')
     # context.bot.send_message(ordering)
-    # for data in ordering:
-    print(ordering)
-        # context.bot.send_message(12, 'sdsdsd')
-    
-    # info = f"category_id{context.user_data['category_id :']}\n description{context.user_data['description :']}\n region{context.user_data['region_id :']}\n district{context.user_data['distcrit_id :']}\n location{context.user_data['location :']}"
+    for data in ordering:
+        context.bot.send_message(data['tg_id'], 'jjjjjj')
     query.message.reply_text('Biz sizni malumotlarizi oldik sz bilan boglanamz')
 
 def help_command(update, context):
