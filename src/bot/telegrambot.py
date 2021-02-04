@@ -293,6 +293,7 @@ def locations(update, context):
 
 def last(update, context):
     phone_user = update.message
+    print('working.............')
     if update.message:
         user = update.message
         try:
@@ -317,8 +318,6 @@ def last(update, context):
             context.user_data['category_id'],
             context.user_data['region_id'],
             context.user_data['distcrit_id'])
-    # context.bot.send_message(ordering, f'oka ish bor...\n{order.description}')
-    # context.bot.send_message(ordering)
     for data in ordering:
         context.bot.send_message(data['tg_id'], 'jjjjjj')
 
